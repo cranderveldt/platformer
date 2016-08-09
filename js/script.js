@@ -1,6 +1,66 @@
 var app = angular.module('platformer', []);
 app.controller('Main',['$scope', '$interval', function ($scope, $interval) {
   
+  var Player = function() {
+    var self = this;
+    self.pos = { x: 0, y: 0 };
+    self.vel = { x: 0, y: 0 };
+    self.size = { x: 40, y: 40 };
+    self.dir = 0;
+    self.ground = true;
+    self.air_jump = false;
+    self.constants = {
+      acc: {
+        air: .33
+        , ground: .5
+      }
+      , max_x: 10
+    };
+    self.getCSSPosition = function() {
+      return { bottom: self.pos.y, left: self.pos.x };
+    };
+    self.isOnGround = function() {
+      return self.ground;
+    };
+    self.isInAir = function() {
+      return !self.ground;
+    };
+    self.hasUsedAirJump = function() {
+      return self.air_jump;
+    };
+    self.canAirJump = function() {
+      return !self.air_jump;
+    };
+    // set with constraints
+    self.setVelX = function(x) {
+      self.vel.x = Math.min(x, self.constants.max_x);
+    };
+    self.setVelY = function(y) {
+      self.vel.y = y;
+    };
+    self.adjustVelX = function(x) {
+      self.vel.x = Math.min(self.vel.x + x, self.constants.max_x);
+    };
+    self.adjustVelY = function(y) {
+      self.vel.y = self.vel.y + y;
+    };
+
+    self.setPosX = function(x) {
+      self.pos.x = x;
+    };
+    self.setPosY = function(y) {
+      self.pos.y = y;
+    };
+    self.adjustPosX = function(x) {
+      self.pos.x = self.pos.x + x;
+    };
+    self.adjustPosY = function(y) {
+      self.pos.y = self.pos.y + y;
+    };
+  };
+
+  $scope.player = new Player();
+
   $scope.environment = {
     gravity: .25 // pixels per frame squared?
     , friction: .1
@@ -29,24 +89,6 @@ app.controller('Main',['$scope', '$interval', function ($scope, $interval) {
     right: false
     , left: false
     , up: false
-  };
-
-  $scope.player = {
-    position: {bottom: 0, left: 0}
-    , speed: {x: 0, y: 0}
-    , direction: 0
-    , ground: true
-    , air_jump: false
-    , constants: {
-      air: {
-        acc: .33
-        , max_speed: 10
-      }
-      , ground: {
-        acc: .5
-        , max_speed: 10
-      }
-    }
   };
 
   $scope.playerKeyup = function(e) {
@@ -85,22 +127,22 @@ app.controller('Main',['$scope', '$interval', function ($scope, $interval) {
 
   $scope.checkInputs = function() {
     if ($scope.keysdown.left) {
-      var acc = $scope.player.ground ? $scope.player.constants.ground.acc : $scope.player.constants.air.acc
-      $scope.player.speed.x = Math.min($scope.player.speed.x + acc, $scope.player.constants.ground.max_speed);
-      $scope.player.direction = -1;
+      $scope.player.adjustVelX($scope.player.isOnGround() ? $scope.player.constants.acc.ground : $scope.player.constants.acc.air);
+      $scope.player.dir = -1;
     }
+
     if ($scope.keysdown.right) {
-      var acc = $scope.player.ground ? $scope.player.constants.ground.acc : $scope.player.constants.air.acc
-      $scope.player.speed.x = Math.min($scope.player.speed.x + acc, $scope.player.constants.ground.max_speed);
-      $scope.player.direction = 1;
+      $scope.player.adjustVelX($scope.player.isOnGround() ? $scope.player.constants.acc.ground : $scope.player.constants.acc.air);
+      $scope.player.dir = 1;
     }
+
     if ($scope.keysdown.up) {
-      if ($scope.player.ground) {
-        $scope.player.speed.y = 10;
+      if ($scope.player.isOnGround()) {
+        $scope.player.setVelY(10);
         $scope.event_timestamps.jump = $scope.event_timestamps.keydown.up;
       }
-      if ($scope.event_timestamps.jump < $scope.event_timestamps.keyup.up && !$scope.player.ground && !$scope.player.air_jump) {
-        $scope.player.speed.y = 10;
+      if ($scope.event_timestamps.jump < $scope.event_timestamps.keyup.up && $scope.player.isInAir() && $scope.player.canAirJump()) {
+        $scope.player.setVelY(10);
         $scope.player.air_jump = true;
       }
     }
@@ -108,11 +150,11 @@ app.controller('Main',['$scope', '$interval', function ($scope, $interval) {
 
   $scope.executeSpeed = function() {
     // Check if the player has speed, move the position
-    if ($scope.player.speed.y !== 0) {
-      $scope.player.position.bottom = $scope.player.position.bottom + $scope.player.speed.y;
+    if ($scope.player.vel.y !== 0) {
+      $scope.player.adjustPosY($scope.player.vel.y)
       
       // Setting the ground flag here when we move position
-      if ($scope.player.position.bottom > 0) {
+      if ($scope.player.pos.y > 0) {
         $scope.player.ground = false;
       } else {
         $scope.player.ground = true;
@@ -120,54 +162,47 @@ app.controller('Main',['$scope', '$interval', function ($scope, $interval) {
       }
     }
 
-    if ($scope.player.speed.x > 0) {
-      $scope.player.position.left = $scope.player.position.left + ($scope.player.speed.x * $scope.player.direction);
-      
-      // Air resistance & friction
-      if ($scope.player.ground) {
-        $scope.player.speed.x = $scope.player.speed.x - $scope.environment.friction;
-      } else {
-        $scope.player.speed.x = $scope.player.speed.x - $scope.environment.air_resistance;
-      }
+    if ($scope.player.vel.x > 0) {
+      $scope.player.adjustPosX($scope.player.vel.x * $scope.player.dir);
     }
   };
 
   $scope.executeAcceleration = function() {
-    if (!$scope.keysdown.right && !$scope.keysdown.left && $scope.player.speed.x > 0) {
+    if (!$scope.keysdown.right && !$scope.keysdown.left && $scope.player.vel.x > 0) {
       // Air resistance & friction
-      if ($scope.player.ground) {
-        $scope.player.speed.x = $scope.player.speed.x - $scope.environment.friction;
+      if ($scope.player.isOnGround()) {
+        $scope.player.adjustVelX($scope.environment.friction * -1);
       } else {
-        $scope.player.speed.x = $scope.player.speed.x - $scope.environment.air_resistance;
+        $scope.player.adjustVelX($scope.environment.air_resistance * -1);
       }
     }
 
     // If the player isn't on the ground, apply gravity effects
     // this is bad, don't check position, check if you're standing on solid ground
-    if (!$scope.player.ground) {
-      $scope.player.speed.y = $scope.player.speed.y - $scope.environment.gravity;
+    if ($scope.player.isInAir()) {
+      $$scope.player.adjustVelY($scope.environment.gravity * -1);
     }
 
   };
 
   $scope.enforceLimits = function() {
     // If player is on the ground, kill y speed
-    if ($scope.player.position.bottom <= 0) {
-      $scope.player.speed.y = 0;
-      $scope.player.position.bottom = 0;
+    if ($scope.player.pos.y <= 0) {
+      $scope.player.setVelY(0);
+      $scope.player.setPosY(0);
     }
 
     // If player hits a wall, kill x speed
-    if ($scope.player.position.left >= $scope.environment.limits.x && $scope.player.direction > 0) {
-      $scope.player.speed.x = 0;
-      $scope.player.direction = 0;
-      $scope.player.position.left = $scope.environment.limits.x;
+    if ($scope.player.pos.x >= $scope.environment.limits.x && $scope.player.dir > 0) {
+      $scope.player.setVelX(0);
+      $scope.player.setPosX($scope.environment.limits.x);
+      $scope.player.dir = 0;
     }
 
-    if ($scope.player.position.left <= 0 && $scope.player.direction < 0) {
-      $scope.player.speed.x = 0;
-      $scope.player.direction = 0;
-      $scope.player.position.left = 0;
+    if ($scope.player.pos.x <= 0 && $scope.player.dir < 0) {
+      $scope.player.setVelX(0);
+      $scope.player.setPosX(0);
+      $scope.player.dir = 0;
     }
   };
 

@@ -12,7 +12,7 @@
 <body ng-controller="Main" ng-keyup="playerKeyup($event)" ng-keydown="playerKeydown($event)">
   <div class="container">
     <div class="game">
-      <div class="player" ng-style="player.position"></div>
+      <div class="player" ng-style="player.getCSSPosition()"></div>
     </div>
   </div>
 </body>
