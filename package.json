@@ -1,0 +1,13 @@
+{
+  "name": "base",
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": {
+    "grunt": "~0.4.5"
+  },
+  "devDependencies": {
+    "grunt": "~0.4.5",
+    "grunt-contrib-sass": "~0.9.0",
+    "grunt-contrib-watch": "~0.6.0"
+  }
+}

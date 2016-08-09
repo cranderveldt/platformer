@@ -1,0 +1,104 @@
+html {
+  min-height: 100vh;
+  font-size: 16px;
+}
+body {
+  @include font-size;
+  min-height: 100vh;
+  background: #FFF;
+}
+body, select, input, button, label {
+  color: $body-color;
+  line-height: $default-line-height;
+  font-family: $body-font-family;
+  font-weight: $body-font-weight;
+  font-style: $body-font-style;
+  -webkit-font-smoothing: antialiased;
+  &:focus {
+    @include box-shadow(none);
+    outline: none;
+  }
+}
+
+h1, h2, h3, h4, h5, h6, .h0, .h1, .h2, .h3, .h4, .h5, .h6, .h7 {
+  color: $body-color;
+  font-family: $body-font-family;
+  font-style: $body-font-style;
+  font-weight: $font-weight-bold;
+  line-height: $default-line-height;
+  margin: 0;
+  -webkit-font-smoothing: antialiased;
+}
+.h0 {
+  @include font-size(72);
+}
+.h1 {
+  @include font-size(36);
+}
+.h2 {
+  @include font-size(30);
+}
+.h3 {
+  @include font-size(24);
+}
+.h4 {
+  @include font-size(20);
+}
+.h5 {
+  @include font-size(18);
+}
+.h6 {
+  @include font-size(16);
+}
+.h7 {
+  @include font-size(14);
+}
+
+*, *:after, *:before { box-sizing: border-box; }
+.no-boxsizing, .no-boxsizing *, .no-boxsizing *:after, .no-boxsizing *:before { box-sizing: content-box; }
+.no-select, .no-select * { @include user-select(none); }
+.clearfix { @include clearfix; }
+
+a {
+  color: $link-default;
+  &:hover, &:active, &:focus {
+    color: $link-hover;
+    text-decoration: none;
+    @include box-shadow(none);
+    outline: none;
+  }
+}
+
+img {
+  max-width: 100%;
+  width: auto;
+}
+.img {
+  background: transparent url() center center no-repeat;
+  background-size: cover;
+}
+
+p {
+  margin: 0 0 rem(20);
+}
+
+label {
+  font-weight: $font-weight-semibold;
+  color: $input-color;
+}
+.input-default {
+  @include border;
+  @include font-size(16, 1);
+  padding: rem(12) rem(15);
+  color: $input-color;
+  background: #FFF;
+  width: 100%;
+  @include round;
+  &:focus {
+    border-color: $input-color;
+  }
+  &[disabled], &[readonly], fieldset[disabled] & {
+    background: $fog;
+    border-color: $fog;
+  }
+}

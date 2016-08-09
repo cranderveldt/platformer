@@ -1,0 +1,25 @@
+body {
+  background: black;
+}
+.container {
+  max-width: 1000px;
+  margin: auto;
+  padding: 40px 0 0;
+}
+
+.game {
+  width: 800px;
+  height: 450px;
+  background: white;
+  margin: auto;
+  position: relative;
+}
+
+.player {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 40px;
+  height: 40px;
+  background: red;
+}
