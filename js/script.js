@@ -180,7 +180,7 @@ app.controller('Main',['$scope', '$interval', function ($scope, $interval) {
     // If the player isn't on the ground, apply gravity effects
     // this is bad, don't check position, check if you're standing on solid ground
     if ($scope.player.isInAir()) {
-      $$scope.player.adjustVelY($scope.environment.gravity * -1);
+      $scope.player.adjustVelY($scope.environment.gravity * -1);
     }
 
   };
