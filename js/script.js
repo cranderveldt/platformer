@@ -63,7 +63,7 @@ app.controller('Main',['$scope', '$interval', function ($scope, $interval) {
 
   $scope.environment = {
     gravity: .25 // pixels per frame squared?
-    , friction: .1
+    , friction: .33
     , air_resistance: .25
     , limits: {
       y: 450
