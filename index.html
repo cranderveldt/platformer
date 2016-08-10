@@ -13,6 +13,7 @@
   <div class="container">
     <div class="game">
       <div class="player" ng-style="player.getCSSPosition()"></div>
+      <div class="platform" ng-style="platform.getCSSProperties()" ng-repeat="platform in platforms track by $index"></div>
     </div>
   </div>
 </body>

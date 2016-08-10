@@ -6,18 +6,27 @@ app.controller('Main',['$scope', '$interval', function ($scope, $interval) {
     self.pos = { x: 0, y: 0 };
     self.vel = { x: 0, y: 0 };
     self.size = { x: 40, y: 40 };
+    self.col = { x: false, y: false };
     self.dir = 0;
     self.ground = true;
     self.air_jump = false;
+    self.timestamps = {
+      jump: 0
+      , air_jump: 0
+    };
     self.constants = {
       acc: {
         air: .33
         , ground: .5
       }
       , max_x: 10
+      , max_y: 15
     };
     self.getCSSPosition = function() {
       return { bottom: self.pos.y, left: self.pos.x };
+    };
+    self.getCollisionObject = function() {
+      return { top: self.pos.y + self.size.y, right: self.pos.x + self.size.x, bottom: self.pos.y, left: self.pos.x };
     };
     self.isOnGround = function() {
       return self.ground;
@@ -31,18 +40,25 @@ app.controller('Main',['$scope', '$interval', function ($scope, $interval) {
     self.canAirJump = function() {
       return !self.air_jump;
     };
+    self.hasNoYCollision = function() {
+      return !self.col.y;
+    };
+    self.hasNoXCollision = function() {
+      return !self.col.x;
+    };
+    
     // set with constraints
     self.setVelX = function(x) {
       self.vel.x = Math.min(x, self.constants.max_x);
     };
     self.setVelY = function(y) {
-      self.vel.y = y;
+      self.vel.y = Math.min(y, self.constants.max_y);
     };
     self.adjustVelX = function(x) {
       self.vel.x = Math.min(self.vel.x + x, self.constants.max_x);
     };
     self.adjustVelY = function(y) {
-      self.vel.y = self.vel.y + y;
+      self.vel.y = Math.min(self.vel.y + y, self.constants.max_y);
     };
 
     self.setPosX = function(x) {
@@ -57,12 +73,40 @@ app.controller('Main',['$scope', '$interval', function ($scope, $interval) {
     self.adjustPosY = function(y) {
       self.pos.y = self.pos.y + y;
     };
+
+    self.stopYMovement = function(pos) {
+      self.setVelY(0);
+      self.setPosY(pos);
+    };
+    self.stopXMovement = function(pos) {
+      self.setVelX(0);
+      self.setPosX(pos);
+      self.dir = 0;
+    };
   };
 
   $scope.player = new Player();
 
+  var Platform = function(pos, size) {
+    self = this;
+    self.pos = pos || { x: 300, y: 100 };
+    self.size = size || { x: 80, y: 5 };
+
+    self.getCSSProperties = function() {
+      return { bottom: self.pos.y, left: self.pos.x, width: self.size.x, height: self.size.y };
+    };
+    self.getCollisionObject = function() {
+      return { top: self.pos.y + self.size.y, right: self.pos.x + self.size.x, bottom: self.pos.y, left: self.pos.x };
+    };
+  };
+
+  $scope.platforms = [];
+
+  $scope.platforms.push(new Platform({ x: 300, y: 100 }, { x: 80, y: 80 }));
+
   $scope.environment = {
-    gravity: .25 // pixels per frame squared?
+    // pixels per frame squared
+    gravity: .75
     , friction: .33
     , air_resistance: .25
     , limits: {
@@ -82,13 +126,20 @@ app.controller('Main',['$scope', '$interval', function ($scope, $interval) {
       , left: 0
       , up: 0
     }
-    , jump: 0
   }
 
   $scope.keysdown = {
     right: false
     , left: false
     , up: false
+  };
+
+  $scope.hasCollided = function(player, platform) {
+    return (
+      (player.right >= platform.left && player.left <= platform.right)
+    ) && (
+      (player.top >= platform.bottom && player.bottom <= platform.top)
+    );
   };
 
   $scope.playerKeyup = function(e) {
@@ -137,12 +188,24 @@ app.controller('Main',['$scope', '$interval', function ($scope, $interval) {
     }
 
     if ($scope.keysdown.up) {
+
+      // if on ground, record jump time
+      // if no jump keyup, keep adding to the speed until you get to max height
+
+
+
+
       if ($scope.player.isOnGround()) {
-        $scope.player.setVelY(10);
-        $scope.event_timestamps.jump = $scope.event_timestamps.keydown.up;
+        $scope.player.setVelY(15);
+        $scope.player.timestamps.jump = $scope.event_timestamps.keydown.up;
       }
-      if ($scope.event_timestamps.jump < $scope.event_timestamps.keyup.up && $scope.player.isInAir() && $scope.player.canAirJump()) {
-        $scope.player.setVelY(10);
+      // this is continuous jumping while holding up, but we need to somehow record
+      // the peak of the jump, so holding up doesn't affect the player coming down
+      // if ($scope.player.isInAir() && $scope.player.timestamps.jump > $scope.event_timestamps.keyup.up) {
+      //   $scope.player.adjustVelY(.5);
+      // }
+      if ($scope.player.timestamps.jump < $scope.event_timestamps.keyup.up && $scope.player.isInAir() && $scope.player.canAirJump()) {
+        $scope.player.setVelY(15);
         $scope.player.air_jump = true;
       }
     }
@@ -185,24 +248,59 @@ app.controller('Main',['$scope', '$interval', function ($scope, $interval) {
 
   };
 
+  $scope.checkCollision = function() {
+    var player = $scope.player.getCollisionObject();
+
+    for (var p in $scope.platforms) {
+      var platform = $scope.platforms[p].getCollisionObject();
+      
+      if ($scope.hasCollided(player, platform)) {
+        if ($scope.player.hasNoYCollision()) {
+          // we need to find out where the collsion is happening, one of four options
+          if ($scope.player.vel.y < 0 && player.top > platform.bottom) {
+            $scope.player.stopYMovement(platform.top);
+            $scope.player.ground = true;
+            $scope.player.air_jump = false;
+            $scope.player.col.y = true;
+          }
+          if ($scope.player.vel.y > 0 && player.bottom < platform.top) {
+            $scope.player.stopYMovement(platform.bottom - $scope.player.size.y);
+            $scope.player.col.y = true;
+          }
+          if ($scope.player.dir > 0 && player.left < platform.right) {
+            $scope.player.stopXMovement(platform.left + $scope.player.size.x);
+            $scope.player.col.x = true;
+          }
+          if ($scope.player.dir < 0 && player.right > platform.left) {
+            $scope.player.stopXMovement(platform.right);
+            $scope.player.col.x = true;
+          }
+        }
+      } else {
+        if ($scope.player.col.y) {
+          $scope.player.col.y = false;
+          $scope.player.ground = false;
+        }
+        if ($scope.player.col.x) {
+          $scope.player.col.x = false;
+        }
+      }
+    }
+  };
+
   $scope.enforceLimits = function() {
     // If player is on the ground, kill y speed
     if ($scope.player.pos.y <= 0) {
-      $scope.player.setVelY(0);
-      $scope.player.setPosY(0);
+      $scope.player.stopYMovement(0);
     }
 
     // If player hits a wall, kill x speed
     if ($scope.player.pos.x >= $scope.environment.limits.x && $scope.player.dir > 0) {
-      $scope.player.setVelX(0);
-      $scope.player.setPosX($scope.environment.limits.x);
-      $scope.player.dir = 0;
+      $scope.player.stopXMovement($scope.environment.limits.x);
     }
 
     if ($scope.player.pos.x <= 0 && $scope.player.dir < 0) {
-      $scope.player.setVelX(0);
-      $scope.player.setPosX(0);
-      $scope.player.dir = 0;
+      $scope.player.stopXMovement(0);
     }
   };
 
@@ -211,6 +309,7 @@ app.controller('Main',['$scope', '$interval', function ($scope, $interval) {
       $scope.checkInputs();
       $scope.executeSpeed();
       $scope.executeAcceleration();
+      $scope.checkCollision();
       $scope.enforceLimits();
     }, 20);
   };
