@@ -21,6 +21,7 @@ app.controller('Main',['$scope', '$interval', function ($scope, $interval) {
       }
       , max_x: 10
       , max_y: 15
+      , jump_frames: 40
     };
     self.getCSSPosition = function() {
       return { bottom: self.pos.y, left: self.pos.x };
@@ -201,8 +202,8 @@ app.controller('Main',['$scope', '$interval', function ($scope, $interval) {
       }
       // this is continuous jumping while holding up, but we need to somehow record
       // the peak of the jump, so holding up doesn't affect the player coming down
-      // if ($scope.player.isInAir() && $scope.player.timestamps.jump > $scope.event_timestamps.keyup.up) {
-      //   $scope.player.adjustVelY(.5);
+      // if ($scope.player.isInAir() && $scope.player.timestamps.jump > $scope.event_timestamps.keyup.up && something about total frames jumping being less than the limit) {
+      //   $scope.player.setVelY(15);
       // }
       if ($scope.player.timestamps.jump < $scope.event_timestamps.keyup.up && $scope.player.isInAir() && $scope.player.canAirJump()) {
         $scope.player.setVelY(15);
@@ -263,18 +264,18 @@ app.controller('Main',['$scope', '$interval', function ($scope, $interval) {
             $scope.player.air_jump = false;
             $scope.player.col.y = true;
           }
-          if ($scope.player.vel.y > 0 && player.bottom < platform.top) {
-            $scope.player.stopYMovement(platform.bottom - $scope.player.size.y);
-            $scope.player.col.y = true;
-          }
-          if ($scope.player.dir > 0 && player.left < platform.right) {
-            $scope.player.stopXMovement(platform.left + $scope.player.size.x);
-            $scope.player.col.x = true;
-          }
-          if ($scope.player.dir < 0 && player.right > platform.left) {
-            $scope.player.stopXMovement(platform.right);
-            $scope.player.col.x = true;
-          }
+          // if ($scope.player.vel.y > 0 && player.bottom < platform.top) {
+          //   $scope.player.stopYMovement(platform.bottom - $scope.player.size.y);
+          //   $scope.player.col.y = true;
+          // }
+          // if ($scope.player.dir > 0 && player.left < platform.right) {
+          //   $scope.player.stopXMovement(platform.left + $scope.player.size.x);
+          //   $scope.player.col.x = true;
+          // }
+          // if ($scope.player.dir < 0 && player.right > platform.left) {
+          //   $scope.player.stopXMovement(platform.right);
+          //   $scope.player.col.x = true;
+          // }
         }
       } else {
         if ($scope.player.col.y) {
@@ -295,8 +296,8 @@ app.controller('Main',['$scope', '$interval', function ($scope, $interval) {
     }
 
     // If player hits a wall, kill x speed
-    if ($scope.player.pos.x >= $scope.environment.limits.x && $scope.player.dir > 0) {
-      $scope.player.stopXMovement($scope.environment.limits.x);
+    if ($scope.player.pos.x + $scope.player.size.x >= $scope.environment.limits.x && $scope.player.dir > 0) {
+      $scope.player.stopXMovement($scope.environment.limits.x - $scope.player.size.x);
     }
 
     if ($scope.player.pos.x <= 0 && $scope.player.dir < 0) {
