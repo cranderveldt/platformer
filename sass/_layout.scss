@@ -40,6 +40,19 @@ body {
   padding-top: 10px;
 }
 
+.meta {
+  @include flex-row-at(0);
+  @include flex-justify(space-between);
+  @include flex-align(center);
+  font-size: 16px;
+  color: #555;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  padding: 10px;
+}
+
 .game-over {
   width: 800px;
   height: 450px;
@@ -47,9 +60,14 @@ body {
   margin: auto;
   position: relative;
   text-align: center;
-  font-size: 72px;
   color: white;
   @include flex-row-at(0);
   @include flex-justify(center);
   @include flex-align(center);
+  @include flex-wrap;
+}
+
+.game-over-head {
+  font-size: 72px;
+  width: 100%;
 }

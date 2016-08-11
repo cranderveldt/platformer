@@ -15,8 +15,15 @@
       <div class="player" ng-style="player.getCSSPosition()"></div>
       <div class="platform" ng-style="platform.getCSSProperties()" ng-repeat="platform in platforms track by $index"></div>
       <div class="clock" ng-bind="timeRemaining()"></div>
+      <div class="meta">
+        <div class="level">Level <span ng-bind="environment.level"></span></div>
+        <div class="score">Score: <span ng-bind="environment.score"></span></div>
+      </div>
     </div>
-    <div class="game-over" ng-show="environment.game_over"><span>GAME OVER</span></div>
+    <div class="game-over" ng-show="environment.game_over" ng-click="resetGame()">
+      <div class="game-over-head">GAME OVER</div>
+      <div>click to retry</div>
+    </div>
   </div>
 </body>
 </html>

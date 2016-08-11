@@ -133,6 +133,7 @@ app.controller('Main',['$scope', '$interval', function ($scope, $interval) {
     , game_over: false
     , watcher: 0
     , level: 0
+    , score: 0
   };
 
   $scope.event_timestamps = {
@@ -339,7 +340,11 @@ app.controller('Main',['$scope', '$interval', function ($scope, $interval) {
             $scope.player.ground = true;
             $scope.player.air_jump = false;
             $scope.player.col.y = true;
-            $scope.platforms[p].stomped = true;
+            
+            if (!$scope.platforms[p].stomped) {
+              $scope.platforms[p].stomped = true;
+              $scope.environment.score = $scope.environment.score + 5;
+            }
           }
           if ($scope.collsionFromBelow(player, platform)) {
             $scope.player.stopYMovement(platform.bottom - $scope.player.size.y);
@@ -405,7 +410,20 @@ app.controller('Main',['$scope', '$interval', function ($scope, $interval) {
       $scope.addToRemainingTime();
       $scope.resetLevel();
       $scope.environment.level = $scope.environment.level + 1;
+      $scope.environment.score = $scope.environment.score + 10;
     }
+  };
+
+  $scope.resetEnvironment = function() {
+    $scope.environment.time = {
+      elapsed: 0
+      , remaining: 15000
+    };
+
+    $scope.environment.game_over = false;
+    $scope.environment.watcher = 0;
+    $scope.environment.level = 0;
+    $scope.environment.score = 0;
   };
 
   $scope.resetLevel = function() {
@@ -413,11 +431,25 @@ app.controller('Main',['$scope', '$interval', function ($scope, $interval) {
     $scope.resetPlatforms();
   };
 
+  $scope.resetGame = function() {
+    $scope.resetLevel();
+    $scope.resetEnvironment();
+  };
+
+  $scope.getRandomPlatformX = function() {
+    return _.random(700)
+  };
+
+  $scope.getRandomPlatformY = function() {
+    return _.random(400);
+  };
+
   $scope.resetPlatforms = function() {
     $scope.platforms = [];
+    var platforms_count = Math.floor($scope.environment.level / 5) + 5;
     do {
-      $scope.platforms.push(new Platform({ x: _.random(700), y: _.random(400) }, { x: 80, y: 5 }));
-    } while ($scope.platforms.length < 5);
+      $scope.platforms.push(new Platform({ x: $scope.getRandomPlatformX(), y: $scope.getRandomPlatformY() }, { x: 80, y: 5 }));
+    } while ($scope.platforms.length < platforms_count);
   };
 
   $scope.gameOver = function() {
@@ -445,7 +477,7 @@ app.controller('Main',['$scope', '$interval', function ($scope, $interval) {
   };
 
   $scope.addToRemainingTime = function() {
-    $scope.environment.time.remaining = $scope.environment.time.remaining + 10000;
+    $scope.environment.time.remaining = $scope.environment.time.remaining + 8000 + (Math.floor($scope.environment.level / 5) * 2000);
   };
 
   $scope.timeRemaining = function() {
