@@ -128,7 +128,7 @@ app.controller('Main',['$scope', '$interval', function ($scope, $interval) {
     }
     , time: {
       elapsed: 0
-      , remaining: 15000
+      , remaining: 10000
     }
     , game_over: false
     , watcher: 0
@@ -434,21 +434,49 @@ app.controller('Main',['$scope', '$interval', function ($scope, $interval) {
   $scope.resetGame = function() {
     $scope.resetLevel();
     $scope.resetEnvironment();
+    $scope.gameWatcher();
+  };
+
+  $scope.platformHasConflicts = function(platform) {
+    var has_conflicts = false;
+    platform.top = platform.top + $scope.player.size.y;
+    platform.bottom = platform.bottom + $scope.player.size.y;
+
+    for (var p in $scope.platforms) {
+      if ($scope.hasCollided(platform, $scope.platforms[p].getCollisionObject())) {
+        has_conflicts = true;
+      }
+    }
+    return has_conflicts;
   };
 
   $scope.getRandomPlatformX = function() {
-    return _.random(700)
+    return _.random(30, 700)
   };
 
-  $scope.getRandomPlatformY = function() {
-    return _.random(400);
+  $scope.getRandomPlatformY = function(x, width) {
+    var y = _.random(20, 400);
+
+    if ($scope.platformHasConflicts({top: y + 5, right: x + width, bottom: y, left: x})) {
+      y = $scope.getRandomPlatformY(x, width);
+    }
+
+    return y;
+  };
+
+  $scope.generateRandomPlatform = function() {
+    var x = _.random(700);
+    var width = _.random(50, 120);
+    var y = $scope.getRandomPlatformY(x, width);
+    return new Platform({ x: x, y: y }, { x: width, y: 5 });
   };
 
   $scope.resetPlatforms = function() {
     $scope.platforms = [];
     var platforms_count = Math.floor($scope.environment.level / 5) + 5;
     do {
-      $scope.platforms.push(new Platform({ x: $scope.getRandomPlatformX(), y: $scope.getRandomPlatformY() }, { x: 80, y: 5 }));
+      var platform = $scope.generateRandomPlatform();
+      $scope.platforms.push(platform);
     } while ($scope.platforms.length < platforms_count);
   };
 
@@ -477,7 +505,7 @@ app.controller('Main',['$scope', '$interval', function ($scope, $interval) {
   };
 
   $scope.addToRemainingTime = function() {
-    $scope.environment.time.remaining = $scope.environment.time.remaining + 8000 + (Math.floor($scope.environment.level / 5) * 2000);
+    $scope.environment.time.remaining = $scope.environment.time.remaining + 7000 + (Math.floor($scope.environment.level / 5) * 2000);
   };
 
   $scope.timeRemaining = function() {

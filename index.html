@@ -22,6 +22,7 @@
     </div>
     <div class="game-over" ng-show="environment.game_over" ng-click="resetGame()">
       <div class="game-over-head">GAME OVER</div>
+      <div style="width: 100%">Score: <span ng-bind="environment.score"></span></div>
       <div>click to retry</div>
     </div>
   </div>
