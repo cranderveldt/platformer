@@ -334,6 +334,8 @@ app.controller('Main',['$scope', '$interval', function ($scope, $interval) {
       if ($scope.hasCollided(player, platform)) {
 
         has_no_collisions = false;
+
+        // Look at this for detecting corner collisions better
         if ($scope.player.hasNoYCollision()) {
           if ($scope.collsionFromAbove(player, platform)) {
             $scope.player.stopYMovement(platform.top);
