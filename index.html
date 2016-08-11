@@ -11,10 +11,12 @@
 </head>
 <body ng-controller="Main" ng-keyup="playerKeyup($event)" ng-keydown="playerKeydown($event)">
   <div class="container">
-    <div class="game">
+    <div class="game" ng-hide="environment.game_over">
       <div class="player" ng-style="player.getCSSPosition()"></div>
       <div class="platform" ng-style="platform.getCSSProperties()" ng-repeat="platform in platforms track by $index"></div>
+      <div class="clock" ng-bind="timeRemaining()"></div>
     </div>
+    <div class="game-over" ng-show="environment.game_over"><span>GAME OVER</span></div>
   </div>
 </body>
 </html>
