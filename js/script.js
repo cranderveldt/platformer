@@ -164,9 +164,14 @@ app.controller('Main',['$scope', '$interval', function ($scope, $interval) {
   $scope.hasCollided = function(player, platform) {
     return (
       (player.right >= platform.left && player.left <= platform.right)
-    ) && (
+      && 
       (player.top >= platform.bottom && player.bottom <= platform.top)
     );
+    // || (
+    //   (platform.right >= player.left && platform.left <= player.right)
+    //   && 
+    //   (platform.top >= player.bottom && platform.bottom <= player.top)
+    // );
   };
 
   $scope.collsionFromAbove = function(player, platform) {
@@ -347,7 +352,7 @@ app.controller('Main',['$scope', '$interval', function ($scope, $interval) {
     for (var p in $scope.platforms) {
       var platform = $scope.platforms[p].getCollisionObject();
       if ($scope.hasCollided(player, platform)) {
-
+        // console.log('yep');
         has_no_collisions = false;
 
         // Look at this for detecting corner collisions better
@@ -498,7 +503,7 @@ app.controller('Main',['$scope', '$interval', function ($scope, $interval) {
     var platforms_count = Math.floor($scope.environment.level / 3) + 5;
     
     // First platform much be reachable from ground
-    var platform = $scope.generateRandomPlatform([20, 200]);
+    var platform = $scope.generateRandomPlatform([20, 30]);
     $scope.platforms.push(platform);
 
     // The rest of the platforms can be wherever
