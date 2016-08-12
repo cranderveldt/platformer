@@ -120,8 +120,8 @@ app.controller('Main',['$scope', '$interval', function ($scope, $interval) {
   $scope.environment = {
     // pixels per frame squared
     gravity: .75
-    , friction: .33
-    , air_resistance: .25
+    , friction: .5
+    , air_resistance: .1
     , limits: {
       y: 450
       , x: 800
@@ -131,9 +131,12 @@ app.controller('Main',['$scope', '$interval', function ($scope, $interval) {
       , remaining: 10000
     }
     , game_over: false
-    , watcher: 0
-    , level: 0
+    , watcher: null
+    , level: 1
     , score: 0
+    , best_score: 0
+    , dev: false
+    , title: true
   };
 
   $scope.event_timestamps = {
@@ -188,14 +191,22 @@ app.controller('Main',['$scope', '$interval', function ($scope, $interval) {
     }
   };
 
+  $scope.clipMomentum = function() {
+    if ($scope.player.vel.x > 4) {
+      $scope.player.setVelX(4);
+    }
+  };
+
   $scope.playerKeyup = function(e) {
     if (e.keyCode === 37) {
       $scope.keysdown.left = false;
       $scope.event_timestamps.keyup.left = e.timeStamp;
+      $scope.clipMomentum();
     }
     if (e.keyCode === 39) {
       $scope.keysdown.right = false;
       $scope.event_timestamps.keyup.right = e.timeStamp;
+      $scope.clipMomentum();
     }
     if (e.keyCode === 32 || e.keyCode === 38) {
       $scope.keysdown.up = false;
@@ -209,7 +220,7 @@ app.controller('Main',['$scope', '$interval', function ($scope, $interval) {
   };
 
   $scope.playerKeydown = function(e) {
-    // console.log(e);
+    // console.log(e.keyCode);
     if (e.keyCode === 37) {
       $scope.keysdown.left = true;
       $scope.event_timestamps.keydown.left = e.timeStamp;
@@ -228,6 +239,10 @@ app.controller('Main',['$scope', '$interval', function ($scope, $interval) {
     if (e.keyCode === 40) {
       $scope.keysdown.down = true;
       $scope.event_timestamps.keydown.down = e.timeStamp;
+    }
+
+    if (e.keyCode === 82) {
+      $scope.resetGame();
     }
 
   };
@@ -434,6 +449,9 @@ app.controller('Main',['$scope', '$interval', function ($scope, $interval) {
   };
 
   $scope.resetGame = function() {
+    if (!_.isNull($scope.environment.watcher)) {
+      $scope.gameOver();
+    }
     $scope.resetLevel();
     $scope.resetEnvironment();
     $scope.gameWatcher();
@@ -441,8 +459,9 @@ app.controller('Main',['$scope', '$interval', function ($scope, $interval) {
 
   $scope.platformHasConflicts = function(platform) {
     var has_conflicts = false;
-    platform.top = platform.top + $scope.player.size.y;
-    platform.bottom = platform.bottom + $scope.player.size.y;
+    var buffer = 10;
+    platform.top = platform.top + $scope.player.size.y + buffer;
+    platform.bottom = platform.bottom - ($scope.player.size.y + buffer);
 
     for (var p in $scope.platforms) {
       if ($scope.hasCollided(platform, $scope.platforms[p].getCollisionObject())) {
@@ -456,8 +475,9 @@ app.controller('Main',['$scope', '$interval', function ($scope, $interval) {
     return _.random(30, 700)
   };
 
-  $scope.getRandomPlatformY = function(x, width) {
-    var y = _.random(20, 400);
+  $scope.getRandomPlatformY = function(x, width, range) {
+    range = range || [20, 400]
+    var y = _.random(range[0], range[1]);
 
     if ($scope.platformHasConflicts({top: y + 5, right: x + width, bottom: y, left: x})) {
       y = $scope.getRandomPlatformY(x, width);
@@ -466,25 +486,34 @@ app.controller('Main',['$scope', '$interval', function ($scope, $interval) {
     return y;
   };
 
-  $scope.generateRandomPlatform = function() {
+  $scope.generateRandomPlatform = function(range) {
     var x = _.random(700);
     var width = _.random(50, 120);
-    var y = $scope.getRandomPlatformY(x, width);
+    var y = $scope.getRandomPlatformY(x, width, range);
     return new Platform({ x: x, y: y }, { x: width, y: 5 });
   };
 
   $scope.resetPlatforms = function() {
     $scope.platforms = [];
-    var platforms_count = Math.floor($scope.environment.level / 5) + 5;
+    var platforms_count = Math.floor($scope.environment.level / 3) + 5;
+    
+    // First platform much be reachable from ground
+    var platform = $scope.generateRandomPlatform([20, 200]);
+    $scope.platforms.push(platform);
+
+    // The rest of the platforms can be wherever
     do {
-      var platform = $scope.generateRandomPlatform();
+      platform = $scope.generateRandomPlatform();
       $scope.platforms.push(platform);
     } while ($scope.platforms.length < platforms_count);
   };
 
   $scope.gameOver = function() {
     $interval.cancel($scope.environment.watcher);
+    $scope.environment.watcher = null;
     $scope.environment.game_over = true;
+    $scope.environment.best_score = Math.max($scope.environment.score, $scope.environment.best_score);
+    localStorage.setItem('crander_platformer', '{"best_score": ' + $scope.environment.best_score + '}');
   };
 
   $scope.padNumber = function(num) {
@@ -501,13 +530,13 @@ app.controller('Main',['$scope', '$interval', function ($scope, $interval) {
     $scope.environment.time.elapsed = $scope.environment.time.elapsed + 20;
     $scope.environment.time.remaining = $scope.environment.time.remaining - 20;
 
-    if ($scope.environment.time.remaining <= 0) {
+    if ($scope.environment.time.remaining <= 0 && !$scope.environment.dev) {
       $scope.gameOver();
     }
   };
 
   $scope.addToRemainingTime = function() {
-    $scope.environment.time.remaining = $scope.environment.time.remaining + 7000 + (Math.floor($scope.environment.level / 5) * 2000);
+    $scope.environment.time.remaining = $scope.environment.time.remaining + 7000 + (Math.floor($scope.environment.level / 10) * 1000);
   };
 
   $scope.timeRemaining = function() {
@@ -526,10 +555,20 @@ app.controller('Main',['$scope', '$interval', function ($scope, $interval) {
     }, 20);
   };
 
+  $scope.startGame = function() {
+    $scope.gameWatcher();
+    $scope.environment.title = false;
+  };
+
   $scope.onPageLoad = function() {
     $scope.player = new Player();
     $scope.resetPlatforms();
-    $scope.gameWatcher();
+
+    var stored_object = localStorage.getItem('crander_platformer');
+    if (!_.isNull(stored_object)) {
+      stored_object = JSON.parse(stored_object);
+      $scope.environment.best_score = stored_object.best_score
+    }
   };
 
   $scope.onPageLoad();

@@ -67,7 +67,38 @@ body {
   @include flex-wrap;
 }
 
-.game-over-head {
+h1 {
   font-size: 72px;
   width: 100%;
+  text-transform: uppercase;
+  text-align: center;
+  margin: 0 0 30px;
+  color: #AAA;
+  font-weight: normal;
+}
+
+.title-screen {
+  width: 800px;
+  height: 450px;
+  background: black;
+  margin: auto;
+  position: relative;
+  text-align: center;
+  color: white;
+  @include flex-row-at(0);
+  @include flex-justify(center);
+  @include flex-align(center);
+  button {
+    border: 0;
+    padding: 20px 35px;
+    @include round(4px);
+    background: white;
+    color: black;
+    font-size: 24px;
+    font-weight: bold;
+    cursor: pointer;
+    &:hover {
+      opacity: .6;
+    }
+  }
 }

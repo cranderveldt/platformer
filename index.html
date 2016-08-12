@@ -11,7 +11,15 @@
 </head>
 <body ng-controller="Main" ng-keyup="playerKeyup($event)" ng-keydown="playerKeydown($event)">
   <div class="container">
-    <div class="game" ng-hide="environment.game_over">
+    <div class="title-screen" ng-show="environment.title">
+      <div>
+        <h1>Platformer</h1>
+        <p>Arrows to move, space to jump, R to restart.</p>
+        <p>Best score: <span ng-bind="environment.best_score"></span></p>
+        <button type="button" ng-click="startGame()">Play Now</button>
+      </div>
+    </div>
+    <div class="game" ng-hide="environment.game_over || environment.title">
       <div class="player" ng-style="player.getCSSPosition()"></div>
       <div class="platform" ng-style="platform.getCSSProperties()" ng-repeat="platform in platforms track by $index"></div>
       <div class="clock" ng-bind="timeRemaining()"></div>
@@ -21,9 +29,11 @@
       </div>
     </div>
     <div class="game-over" ng-show="environment.game_over" ng-click="resetGame()">
-      <div class="game-over-head">GAME OVER</div>
-      <div style="width: 100%">Score: <span ng-bind="environment.score"></span></div>
-      <div>click to retry</div>
+      <div>
+        <h1>GAME OVER</h1>
+        <p>Score: <span ng-bind="environment.score"></span></p>
+        <p>Type R to retry</p>
+      </div>
     </div>
   </div>
 </body>
