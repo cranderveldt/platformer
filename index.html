@@ -15,6 +15,7 @@
       <div>
         <h1>Platformer</h1>
         <p>Arrows to move, space to jump, R to restart.</p>
+        <p><strong style="color: red;">Red is bad.</strong> <strong style="color: blue;">Blue is good.</strong></p>
         <p>Best score: <span ng-bind="environment.best_score"></span></p>
         <button type="button" ng-click="startGame()">Play Now</button>
       </div>
@@ -22,6 +23,7 @@
     <div class="game" ng-hide="environment.game_over || environment.title">
       <div class="player" ng-style="player.getCSSPosition()"></div>
       <div class="platform" ng-style="platform.getCSSProperties()" ng-repeat="platform in platforms track by $index"></div>
+      <div class="token" ng-style="token.getCSSProperties()" ng-repeat="token in tokens track by $index"><i class="fa" ng-class="token.getTokenTypeClass()"></i></div>
       <div class="clock" ng-bind="timeRemaining()"></div>
       <div class="meta">
         <div class="level">Level <span ng-bind="environment.level"></span></div>

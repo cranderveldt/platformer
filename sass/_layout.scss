@@ -1,6 +1,10 @@
 body {
   background: black;
 }
+
+strong {
+  font-weight: bold;
+}
 .container {
   max-width: 1000px;
   margin: auto;
@@ -27,6 +31,12 @@ body {
 .platform {
   background: black;
   position: absolute;
+
+}
+
+.token {
+  position: absolute;
+  font-size: 24px;
 }
 
 .clock {

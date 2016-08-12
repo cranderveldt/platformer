@@ -117,6 +117,26 @@ app.controller('Main',['$scope', '$interval', function ($scope, $interval) {
     return { top: this.pos.y + this.size.y, right: this.pos.x + this.size.x, bottom: this.pos.y, left: this.pos.x };
   };
 
+  var Token = function(pos) {
+    self = this;
+    self.pos = pos || { x: 300, y: 100 };
+    self.size = { x: 24, y: 24 };
+    self.type = "time_loss";
+  };
+
+  Token.prototype.getTokenTypeClass = function() {
+    return "fa-clock-o";
+  };
+  Token.prototype.getTokenTypeColor = function() {
+    return "red";
+  };
+  Token.prototype.getCSSProperties = function() {
+    return { bottom: this.pos.y, left: this.pos.x, width: this.size.x, height: this.size.y, color: this.getTokenTypeColor() };
+  };
+  Token.prototype.getCollisionObject = function() {
+    return { top: this.pos.y + this.size.y, right: this.pos.x + this.size.x, bottom: this.pos.y, left: this.pos.x };
+  };
+
 
   $scope.environment = {
     // pixels per frame squared
@@ -353,7 +373,7 @@ app.controller('Main',['$scope', '$interval', function ($scope, $interval) {
 
   };
 
-  $scope.checkCollision = function() {
+  $scope.checkPlatformCollision = function() {
     var player = $scope.player.getCollisionObject();
     var has_no_collisions = true;
     for (var p in $scope.platforms) {
@@ -397,6 +417,20 @@ app.controller('Main',['$scope', '$interval', function ($scope, $interval) {
         if ($scope.player.vel.y === 0) {
           $scope.player.ground = false;
         }
+      }
+    }
+  };
+
+  $scope.checkTokenCollision = function() {
+    var player = $scope.player.getCollisionObject();
+    for (var t in $scope.tokens) {
+      var token = $scope.tokens[t].getCollisionObject();
+      if ($scope.hasCollided(player, token)) {
+        // remove token
+        // apply effects of type
+        $scope.tokens.splice(t, 1);
+        $scope.environment.time.remaining = $scope.environment.time.remaining - 5000;
+        $scope.environment.score = $scope.environment.score - 10;
       }
     }
   };
@@ -453,6 +487,7 @@ app.controller('Main',['$scope', '$interval', function ($scope, $interval) {
   $scope.resetLevel = function() {
     $scope.player.reset();
     $scope.resetPlatforms();
+    $scope.resetTokens();
   };
 
   $scope.resetGame = function() {
@@ -515,6 +550,17 @@ app.controller('Main',['$scope', '$interval', function ($scope, $interval) {
     } while ($scope.platforms.length < platforms_count);
   };
 
+  $scope.resetTokens = function() {
+    $scope.tokens = [];
+    
+    var tokens_count = Math.floor($scope.environment.level / 5) + _.random(0, Math.floor($scope.environment.level / 5));
+    
+    do {
+      var token = new Token({ x: _.random(700), y: _.random(400) });
+      $scope.tokens.push(token);
+    } while ($scope.tokens.length < tokens_count);
+  };
+
   $scope.gameOver = function() {
     $interval.cancel($scope.environment.watcher);
     $scope.environment.watcher = null;
@@ -554,7 +600,8 @@ app.controller('Main',['$scope', '$interval', function ($scope, $interval) {
     $scope.environment.watcher = $interval(function() {
       $scope.checkInputs();
       $scope.executeSpeed();
-      $scope.checkCollision();
+      $scope.checkPlatformCollision();
+      $scope.checkTokenCollision();
       $scope.enforceLimits();
       $scope.executeAcceleration();
       $scope.advanceTime();
@@ -570,6 +617,7 @@ app.controller('Main',['$scope', '$interval', function ($scope, $interval) {
   $scope.onPageLoad = function() {
     $scope.player = new Player();
     $scope.resetPlatforms();
+    $scope.resetTokens();
 
     var stored_object = localStorage.getItem('crander_platformer');
     if (!_.isNull(stored_object)) {
