@@ -571,9 +571,6 @@ app.controller('Main',['$scope', '$interval', function ($scope, $interval) {
 
   $scope.padNumber = function(num) {
     if (num < 10) {
-      return "00" + num;
-    }
-    if (num < 100) {
       return "0" + num;
     }
     return num;
@@ -593,7 +590,7 @@ app.controller('Main',['$scope', '$interval', function ($scope, $interval) {
   };
 
   $scope.timeRemaining = function() {
-    return $scope.padNumber(Math.floor($scope.environment.time.remaining / 1000)) + ":" + $scope.padNumber($scope.environment.time.remaining % 1000);
+    return $scope.padNumber(Math.floor($scope.environment.time.remaining / 1000)) + ":" + Math.floor(($scope.environment.time.remaining % 1000) / 100);
   };
 
   $scope.gameWatcher = function() {
