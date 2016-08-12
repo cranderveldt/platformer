@@ -108,6 +108,7 @@ app.controller('Main',['$scope', '$interval', function ($scope, $interval) {
     self.pos = pos || { x: 300, y: 100 };
     self.size = size || { x: 80, y: 5 };
     self.stomped = false;
+    self.has_collision = false;
   };
   Platform.prototype.getCSSProperties = function() {
     return { bottom: this.pos.y, left: this.pos.x, width: this.size.x, height: this.size.y, backgroundColor: this.stomped ? 'blue' : 'black' };
@@ -199,6 +200,12 @@ app.controller('Main',['$scope', '$interval', function ($scope, $interval) {
   $scope.clipMomentum = function() {
     if ($scope.player.vel.x > 4) {
       $scope.player.setVelX(4);
+    }
+  };
+
+  $scope.setPlatformCollisionsFalse = function() {
+    for (var p in $scope.platforms) {
+      $scope.platforms[p].has_collision = false;
     }
   };
 
@@ -352,12 +359,12 @@ app.controller('Main',['$scope', '$interval', function ($scope, $interval) {
     for (var p in $scope.platforms) {
       var platform = $scope.platforms[p].getCollisionObject();
       if ($scope.hasCollided(player, platform)) {
-        // console.log('yep');
         has_no_collisions = false;
 
         // Look at this for detecting corner collisions better
         if ($scope.player.hasNoYCollision()) {
           if ($scope.collsionFromAbove(player, platform)) {
+            $scope.platforms[p].has_collision = true;
             $scope.player.stopYMovement(platform.top);
             $scope.player.ground = true;
             $scope.player.air_jump = false;
@@ -373,15 +380,12 @@ app.controller('Main',['$scope', '$interval', function ($scope, $interval) {
             $scope.player.col.y = true;
           }
         }
-        if ($scope.player.hasNoXCollision()) {
-          if ($scope.collsionFromLeft(player, platform)) {
-            $scope.player.stopXMovement(platform.left - $scope.player.size.x);
-            $scope.player.col.x = true;
-          }
-          if ($scope.collsionFromRight(player, platform)) {
-            $scope.player.stopXMovement(platform.right);
-            $scope.player.col.x = true;
-          }
+
+        if ($scope.collsionFromLeft(player, platform) && !$scope.platforms[p].has_collision) {
+          $scope.player.stopXMovement(platform.left - $scope.player.size.x);
+        }
+        if ($scope.collsionFromRight(player, platform) && !$scope.platforms[p].has_collision) {
+          $scope.player.stopXMovement(platform.right);
         }
       }
     }
@@ -389,12 +393,10 @@ app.controller('Main',['$scope', '$interval', function ($scope, $interval) {
     if (has_no_collisions) {
       if ($scope.player.col.y) {
         $scope.player.col.y = false;
+        $scope.setPlatformCollisionsFalse();
         if ($scope.player.vel.y === 0) {
           $scope.player.ground = false;
         }
-      }
-      if ($scope.player.col.x) {
-        $scope.player.col.x = false;
       }
     }
   };
@@ -503,7 +505,7 @@ app.controller('Main',['$scope', '$interval', function ($scope, $interval) {
     var platforms_count = Math.floor($scope.environment.level / 3) + 5;
     
     // First platform much be reachable from ground
-    var platform = $scope.generateRandomPlatform([20, 30]);
+    var platform = $scope.generateRandomPlatform([100, 200]);
     $scope.platforms.push(platform);
 
     // The rest of the platforms can be wherever
