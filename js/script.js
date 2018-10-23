@@ -501,10 +501,16 @@ app.controller('Main',['$scope', '$interval', function ($scope, $interval) {
 
   $scope.platformHasConflicts = function(platform) {
     var has_conflicts = false;
-    var buffer = 10;
+    var buffer = 50;
     platform.top = platform.top + $scope.player.size.y + buffer;
     platform.bottom = platform.bottom - ($scope.player.size.y + buffer);
 
+    // Check for conflicts with start area
+    if ($scope.hasCollided($scope.player, platform)) {
+      has_conflicts = true;
+    }
+
+    // Check for conflicts other platforms
     for (var p in $scope.platforms) {
       if ($scope.hasCollided(platform, $scope.platforms[p].getCollisionObject())) {
         has_conflicts = true;
@@ -555,8 +561,9 @@ app.controller('Main',['$scope', '$interval', function ($scope, $interval) {
     
     var tokens_count = Math.floor($scope.environment.level / 5) + _.random(0, Math.floor($scope.environment.level / 5));
     
+    // Don't spawn tokens on player, so we hardcode no x coord below 40
     do {
-      var token = new Token({ x: _.random(700), y: _.random(400) });
+      var token = new Token({ x: _.random(80, 700), y: _.random(400) });
       $scope.tokens.push(token);
     } while ($scope.tokens.length < tokens_count);
   };
@@ -626,13 +633,3 @@ app.controller('Main',['$scope', '$interval', function ($scope, $interval) {
   $scope.onPageLoad();
 
 }]);
-
-app.directive('cdrPlayer', function () {
-  return {
-    restrict: 'A',
-    scope: {},
-    link: function ($scope, element, attrs) {
-      
-    }
-  };
-});
