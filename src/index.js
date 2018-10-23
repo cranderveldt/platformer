@@ -6,8 +6,13 @@ window._ = _
 import * as angular from 'angular'
 window.angular = angular
 
+import Player from './javascripts/models/player'
+import Platform from './javascripts/models/platform'
+import Token from './javascripts/models/token'
+
 import sassyStyles from './sass/styles.scss'
 import playerIcon from './images/player.gif'
+import markup from './index.html'
 
 var app = angular.module('platformer', []);
 app.controller('Main', [
@@ -15,143 +20,6 @@ app.controller('Main', [
   '$interval',
   function ($scope, $interval) {
     const vm = this;
-
-    var Player = function() {
-      var self = this;
-      self.pos = { x: 0, y: 0 };
-      self.vel = { x: 0, y: 0 };
-      self.size = { x: 32, y: 32 };
-      self.col = { x: false, y: false };
-      self.dir = 0;
-      self.ground = true;
-      self.air_jump = false;
-      self.timestamps = {
-        jump: 0
-        , air_jump: 0
-      };
-      self.constants = {
-        acc: {
-          air: 1
-          , ground: 1
-        }
-        , max_x: 10
-        , max_y: 15
-      };
-      self.jump_frames = {
-        current: 0
-        , max: 20
-      };
-      self.getCSSPosition = function() {
-        return { bottom: self.pos.y, left: self.pos.x };
-      };
-      self.getCollisionObject = function() {
-        return { top: self.pos.y + self.size.y, right: self.pos.x + self.size.x, bottom: self.pos.y, left: self.pos.x };
-      };
-      self.isOnGround = function() {
-        return self.ground;
-      };
-      self.isInAir = function() {
-        return !self.ground;
-      };
-      self.hasUsedAirJump = function() {
-        return self.air_jump;
-      };
-      self.canAirJump = function() {
-        return !self.air_jump;
-      };
-      self.hasNoYCollision = function() {
-        return !self.col.y;
-      };
-      self.hasNoXCollision = function() {
-        return !self.col.x;
-      };
-      
-      // set with constraints
-      self.setVelX = function(x) {
-        self.vel.x = Math.min(x, self.constants.max_x);
-      };
-      self.setVelY = function(y) {
-        self.vel.y = Math.min(y, self.constants.max_y);
-      };
-      self.adjustVelX = function(x) {
-        self.vel.x = Math.min(self.vel.x + x, self.constants.max_x);
-      };
-      self.adjustVelY = function(y) {
-        self.vel.y = Math.min(self.vel.y + y, self.constants.max_y);
-      };
-
-      self.setPosX = function(x) {
-        self.pos.x = x;
-      };
-      self.setPosY = function(y) {
-        self.pos.y = y;
-      };
-      self.adjustPosX = function(x) {
-        self.pos.x = self.pos.x + x;
-      };
-      self.adjustPosY = function(y) {
-        self.pos.y = self.pos.y + y;
-      };
-
-      self.stopYMovement = function(pos) {
-        self.setVelY(0);
-        self.setPosY(pos);
-      };
-      self.stopXMovement = function(pos) {
-        self.setVelX(0);
-        self.setPosX(pos);
-        self.dir = 0;
-      };
-      self.reset = function() {
-        self.pos = { x: 0, y: 0 };
-        self.vel = { x: 0, y: 0 };
-        self.col = { x: false, y: false };
-        self.dir = 0;
-        self.ground = true;
-        self.air_jump = false;
-        self.timestamps = {
-          jump: 0
-          , air_jump: 0
-        };
-        
-        self.jump_frames.current = 0;
-      };
-    };
-
-    var Platform = function(pos, size) {
-      self = this;
-      self.pos = pos || { x: 300, y: 100 };
-      self.size = size || { x: 80, y: 5 };
-      self.stomped = false;
-      self.has_collision = false;
-    };
-    Platform.prototype.getCSSProperties = function() {
-      return { bottom: this.pos.y, left: this.pos.x, width: this.size.x, height: this.size.y, backgroundColor: this.stomped ? 'blue' : 'black' };
-    };
-    Platform.prototype.getCollisionObject = function() {
-      return { top: this.pos.y + this.size.y, right: this.pos.x + this.size.x, bottom: this.pos.y, left: this.pos.x };
-    };
-
-    var Token = function(pos) {
-      self = this;
-      self.pos = pos || { x: 300, y: 100 };
-      self.size = { x: 24, y: 24 };
-      self.type = "time_loss";
-    };
-
-    Token.prototype.getTokenTypeClass = function() {
-      return "fa-clock-o";
-    };
-    Token.prototype.getTokenTypeColor = function() {
-      return "red";
-    };
-    Token.prototype.getCSSProperties = function() {
-      return { bottom: this.pos.y, left: this.pos.x, width: this.size.x, height: this.size.y, color: this.getTokenTypeColor() };
-    };
-    Token.prototype.getCollisionObject = function() {
-      return { top: this.pos.y + this.size.y, right: this.pos.x + this.size.x, bottom: this.pos.y, left: this.pos.x };
-    };
-
 
     vm.environment = {
       // pixels per frame squared
