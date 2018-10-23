@@ -26,7 +26,7 @@ export class Player {
   }
 
   getCSSPosition() {
-    return { bottom: this.pos.y, left: this.pos.x }
+    return { bottom: `${this.pos.y}px`, left: `${this.pos.x}px` }
   }
 
   getCollisionObject() {

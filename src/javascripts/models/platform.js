@@ -7,7 +7,7 @@ export class Platform {
   }
 
   getCSSProperties() {
-    return { bottom: this.pos.y, left: this.pos.x, width: this.size.x, height: this.size.y, backgroundColor: this.stomped ? 'blue' : 'black' }
+    return { bottom: `${this.pos.y}px`, left: `${this.pos.x}px`, width: `${this.size.x}px`, height: `${this.size.y}px`, backgroundColor: this.stomped ? 'blue' : 'black' }
   }
 
   getCollisionObject() {
