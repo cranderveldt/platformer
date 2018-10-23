@@ -3,16 +3,13 @@ window.jQuery = jQuery
 window.$ = jQuery
 import _ from 'underscore'
 window._ = _
-import * as angular from 'angular'
+import angular from 'angular'
 window.angular = angular
 
-import Player from './javascripts/models/player'
-import Platform from './javascripts/models/platform'
-import Token from './javascripts/models/token'
-
-import sassyStyles from './sass/styles.scss'
-import playerIcon from './images/player.gif'
-import markup from './index.html'
+import { Player } from './javascripts/models/player'
+import { Platform } from './javascripts/models/platform'
+import { Token } from './javascripts/models/token'
+import './sass/styles.scss'
 
 var app = angular.module('platformer', []);
 app.controller('Main', [
@@ -483,7 +480,7 @@ app.controller('Main', [
     };
 
     vm.gameWatcher = function() {
-      vm.environment.watcher = $interval(function() {
+      vm.environment.watcher = $interval(() => {
         vm.checkInputs();
         vm.executeSpeed();
         vm.checkPlatformCollision();
@@ -510,6 +507,10 @@ app.controller('Main', [
         stored_object = JSON.parse(stored_object);
         vm.environment.best_score = stored_object.best_score
       }
+
+      $scope.$watch(() => vm.player, () => {
+        console.log(vm.player.getCSSPosition())
+      }, true)
     };
 
     vm.onPageLoad();
